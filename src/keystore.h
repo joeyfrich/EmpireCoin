@@ -83,6 +83,19 @@ public:
         }
         return false;
     }
+    bool EraseKey(CKeyID &address)
+    {
+        {
+            LOCK(cs_KeyStore);
+            KeyMap::iterator it = mapKeys.find(address);
+            if (it != mapKeys.end())
+            {
+                mapKeys.erase(it);
+                return true;
+            }
+            return false;
+        }
+    }
     virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;

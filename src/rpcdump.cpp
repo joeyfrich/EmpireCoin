@@ -98,3 +98,31 @@ Value dumpprivkey(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     return CEmpireCoinSecret(vchSecret).ToString();
 }
+
+Value removeprivkey(const Array& params, bool fHelp)
+{
+    if(fHelp || params.size() != 1)
+        throw runtime_error(
+            "removeprivkey <empirecoinaddress>\n"
+            "Removes the private key corresponding to <empirecoinaddress>.");
+
+    string strAddress = params[0].get_str();
+    CEmpireCoinAddress address;
+
+    if (!address.SetString(strAddress))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid EmpireCoin address");
+    CKeyID keyID;
+    if (!address.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    CKey vchSecret;
+    if (!pwalletMain->GetKey(keyID, vchSecret))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+
+    CWalletDB walletdb(pwalletMain->strWalletFile);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    walletdb.EraseName(strAddress);
+    pwalletMain->EraseKey(keyID);
+
+    return strAddress;
+}
